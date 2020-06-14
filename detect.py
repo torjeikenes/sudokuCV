@@ -18,12 +18,10 @@ import numpy as np
 logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s -  %(levelname)s -  %(message)s')
 
 
-def binaryImage(img):
+def binaryImage(gray):
     """Returns binary image"""
 
     # Preprocessing
-    resize = imutils.resize(img,height=500)
-    gray = cv2.cvtColor(resize,cv2.COLOR_BGR2GRAY)
     blur = cv2.GaussianBlur(gray,(11,11),0)
 
     # Inverse tresholding to later filter contours
@@ -60,18 +58,54 @@ def getGridCorners(binaryImg):
 
     return pts
 
+def filterOutNumber(warp):
+    contours = cv2.findContours(warp,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    contours = imutils.grab_contours(contours)
+
+    mask = warp.copy()
+
+    # expected size of a cell
+    cellVol = warp.shape[0]//9*warp.shape[1]//9
+    
+    # Filtering out numbers
+    for c in contours:
+        if cv2.contourArea(c)< cellVol:
+            cv2.drawContours(mask,[c],-1,(0,0,0),-1)
+
+
+    cv2.imshow("CV-warp",mask)
+    cv2.waitKey(0)
+    
+    # Repair grid lines
+    verticalKernel = cv2.getStructuringElement(cv2.MORPH_RECT,(1,5))
+    mask = cv2.morphologyEx(mask,cv2.MORPH_CLOSE,verticalKernel,iterations=5)
+    horizontalKernel = cv2.getStructuringElement(cv2.MORPH_RECT,(5,1))
+    mask = cv2.morphologyEx(mask,cv2.MORPH_CLOSE,horizontalKernel,iterations=5)
+
+    cv2.imshow("CV-warp",mask)
+    cv2.waitKey(0)
+
+
+    inverted = cv2.bitwise_not(mask)
+    
 
 
 
-def main(imPath):
-    image = cv2.imread(imPath)
-    binary = binaryImage(image)
+
+
+
+def main(image):
+    #preprocessing
+    resize = imutils.resize(image,height=500)
+    gray = cv2.cvtColor(resize,cv2.COLOR_BGR2GRAY)
+
+    binary = binaryImage(gray)
     pts = getGridCorners(binary)
     warp = perspective.four_point_transform(binary,pts)
+    filterOutNumber(warp)
+    cv2.imshow("CV-warp",warp)
+    cv2.waitKey(0)
 
-
-    #cv2.imshow("CV-tresh",binary)
-    #cv2.waitKey(0)
 
 
 
@@ -79,4 +113,5 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Detect a sudoku grid")
     parser.add_argument("-i","--image",help="Path to image")
     args = vars(parser.parse_args())
-    main(args["image"])
+    image = cv2.imread(args["image"])
+    main(image)
