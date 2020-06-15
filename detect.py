@@ -52,12 +52,6 @@ def getGridCorners(binaryImg):
     # Convert approx to a 2d array
     pts = approx[:,0,:]
 
-    # Draw corners of grid
-    #out = binaryImg.copy()
-    #for corner in approx:
-    #    cornerTuple = tuple(corner[0])
-    #    out = cv2.circle(out,cornerTuple,5,(120,120,120),-1)
-
     return pts
 
 def filterOutNumber(warp):
@@ -89,7 +83,6 @@ def getMatrix(img,mask):
     '''Return matrix with the sudoku numbers'''
     cropMarg = 2
 
-
     cnts = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
 
@@ -106,71 +99,69 @@ def getMatrix(img,mask):
             numberGrid.append(horizontalSort)
             row = []
     
-    blur = cv2.GaussianBlur(img,(7,7),0)
-    #blur = cv2.medianBlur(img,5)
+    # Preprocessing
+    blur = cv2.GaussianBlur(img,(5,5),0)
     clean = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-    #blur = cv2.bilateralFilter(img,5,
+    cv2.imshow("CV",clean)
+    cv2.waitKey(0)
 
 
     # Empty sudoku grid to be filled 
     sudokuMatrix = np.zeros((9,9),dtype=np.uint8)
-    out = img.copy()
+
     # Iterates trough all the cells from top to bottom left to right
     for i,r in enumerate(numberGrid):
         for j,c in enumerate(r):
-            logging.debug("row: "+ str(i) + " col: "+ str(j))
-
+            # Crops the cell
             x,y,w,h = cv2.boundingRect(c)
-            #cellCrop = blur[y:y+h,x:x+w]
             cellCrop = clean[y+cropMarg:y+h-cropMarg,x+cropMarg:x+w-cropMarg]
-            #cell = np.zeros(img.shape,dtype=np.uint8)
-            # Single out one cell
-            #cell = cv2.drawContours(cell,[c],-1,(255,255,255),-1)
-            #cellImg = cv2.bitwise_and(blur,cell)
+            # Get the number in the cell and add it to the matrix
             number = getNumber(cellCrop)
+            logging.debug("{}, {}: {}".format(i,j,number))
             sudokuMatrix[i,j] = number
     
-    logging.debug("\n"+str(sudokuMatrix))
+    return sudokuMatrix
 
 def getNumber(cellImg):
-    # Tresholding before ocr
-    #clean = cv2.adaptiveThreshold(cellImg,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-    #                                  cv2.THRESH_BINARY,5,2)
-
-    
-
-    #dilated = cv2.dilate(clean,None,iterations=1)
-    #eroded = cv2.erode(clean,None,iterations=2)
-
+    '''Returns the number from a cell'''
+    # TODO: increase speed of OCR
     # Apply OCR on the cropped image 
     config = ('-l eng --oem 1 --psm 10')
     num = pytesseract.image_to_string(cellImg, config=config) 
 
+    # Only returns a single digit
     if len(num) == 1 and num.isdigit():
         return int(num)
     elif len(num) > 1:
         for c in num:
             if c.isdigit():
                 return int(c)
-    
     return 0
 
-
-
-
-def main(image):
+def img2Matrix(image):
+    '''Returns a sudoku matrix given an image'''
     #preprocessing
     resize = imutils.resize(image,height=700)
     gray = cv2.cvtColor(resize,cv2.COLOR_BGR2GRAY)
-
     binary = binaryImage(gray)
+
+    # Transforms and crops mask and grayscale img to sudoku grid
     pts = getGridCorners(binary)
     binWarp = perspective.four_point_transform(binary,pts)
+    grayWarp = perspective.four_point_transform(gray,pts)
+
+    # Clean up to only grid
     cellMask = filterOutNumber(binWarp)
 
-    grayWarp = perspective.four_point_transform(gray,pts)
-    getMatrix(grayWarp,cellMask)
+    #Get sudoku matrix
+    matrix = getMatrix(grayWarp,cellMask)
+    return matrix
 
+
+def main(image):
+    matrix = img2Matrix(image)
+    logging.info("\n"+str(matrix))
+    cv2.waitKey(0)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Detect a sudoku grid")
