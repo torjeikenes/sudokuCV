@@ -43,6 +43,8 @@ def getGridCorners(binaryImg):
     cnts = cv2.findContours(binaryImg,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
     cnts = imutils.grab_contours(cnts)
 
+    assert len(cnts)>0, "No contours found"
+
     grid = max(cnts,key=cv2.contourArea)
 
     # Find rectangle to get corners
@@ -52,6 +54,7 @@ def getGridCorners(binaryImg):
     # Convert approx to a 2d array
     pts = approx[:,0,:]
 
+    assert len(pts) == 4, "pts does not have 4 corners"
     return pts
 
 def filterOutNumber(warp):
@@ -102,8 +105,6 @@ def getMatrix(img,mask):
     # Preprocessing
     blur = cv2.GaussianBlur(img,(5,5),0)
     clean = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-    cv2.imshow("CV",clean)
-    cv2.waitKey(0)
 
 
     # Empty sudoku grid to be filled 
@@ -149,6 +150,7 @@ def img2Matrix(image):
     pts = getGridCorners(binary)
     binWarp = perspective.four_point_transform(binary,pts)
     grayWarp = perspective.four_point_transform(gray,pts)
+    #cv2.imwrite("tests/data/grayWarp.png",grayWarp)
 
     # Clean up to only grid
     cellMask = filterOutNumber(binWarp)
