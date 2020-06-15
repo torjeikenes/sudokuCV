@@ -15,6 +15,7 @@ from imutils import contours
 import argparse
 import logging
 import numpy as np
+import pytesseract
 
 logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s -  %(levelname)s -  %(message)s')
 
@@ -29,14 +30,10 @@ def binaryImage(gray):
     gausTresh = cv2.adaptiveThreshold(blur,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                       cv2.THRESH_BINARY_INV,11,2)
 
-    cv2.imshow("CV",gausTresh)
-    cv2.waitKey(0)
     # Dilate and erode to make sure the grid contour connects
     dilated = cv2.dilate(gausTresh,None,iterations=1)
     eroded = cv2.erode(dilated,None,iterations=1)
     
-    cv2.imshow("CV",eroded)
-    cv2.waitKey(0)
     
     return eroded
 
@@ -90,6 +87,9 @@ def filterOutNumber(warp):
     
 def getMatrix(img,mask):
     '''Return matrix with the sudoku numbers'''
+    cropMarg = 2
+
+
     cnts = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
 
@@ -107,6 +107,9 @@ def getMatrix(img,mask):
             row = []
     
     blur = cv2.GaussianBlur(img,(7,7),0)
+    #blur = cv2.medianBlur(img,5)
+    clean = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+    #blur = cv2.bilateralFilter(img,5,
 
 
     # Empty sudoku grid to be filled 
@@ -116,23 +119,42 @@ def getMatrix(img,mask):
     for i,r in enumerate(numberGrid):
         for j,c in enumerate(r):
             logging.debug("row: "+ str(i) + " col: "+ str(j))
-            cell = np.zeros(img.shape,dtype=np.uint8)
+
+            x,y,w,h = cv2.boundingRect(c)
+            #cellCrop = blur[y:y+h,x:x+w]
+            cellCrop = clean[y+cropMarg:y+h-cropMarg,x+cropMarg:x+w-cropMarg]
+            #cell = np.zeros(img.shape,dtype=np.uint8)
             # Single out one cell
-            cell = cv2.drawContours(cell,[c],-1,(255,255,255),-1)
-            cellImg = cv2.bitwise_and(blur,cell)
-            number = getNumber(cellImg)
+            #cell = cv2.drawContours(cell,[c],-1,(255,255,255),-1)
+            #cellImg = cv2.bitwise_and(blur,cell)
+            number = getNumber(cellCrop)
+            sudokuMatrix[i,j] = number
+    
+    logging.debug("\n"+str(sudokuMatrix))
 
 def getNumber(cellImg):
     # Tresholding before ocr
-    clean = cv2.adaptiveThreshold(cellImg,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                      cv2.THRESH_BINARY,5,2)
+    #clean = cv2.adaptiveThreshold(cellImg,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+    #                                  cv2.THRESH_BINARY,5,2)
+
     
 
     #dilated = cv2.dilate(clean,None,iterations=1)
     #eroded = cv2.erode(clean,None,iterations=2)
-    #cv2.imshow("CV",dilated)
-    cv2.imshow("CV2",clean)
-    cv2.waitKey(0)
+
+    # Apply OCR on the cropped image 
+    config = ('-l eng --oem 1 --psm 10')
+    num = pytesseract.image_to_string(cellImg, config=config) 
+
+    if len(num) == 1 and num.isdigit():
+        return int(num)
+    elif len(num) > 1:
+        for c in num:
+            if c.isdigit():
+                return int(c)
+    
+    return 0
+
 
 
 
@@ -148,8 +170,6 @@ def main(image):
 
     grayWarp = perspective.four_point_transform(gray,pts)
     getMatrix(grayWarp,cellMask)
-
-
 
 
 if __name__ == '__main__':
