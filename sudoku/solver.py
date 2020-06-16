@@ -33,7 +33,7 @@ def solve(grid):
                 # Attemt didn't succeed so it backtracks
                 return grid, False
 
-    assert 0 in grid, "Sudoku not solved"
+    assert 0 not in grid, "Sudoku not solved"
     return grid, True # Sudoku is solved
 
 def checkNum(grid,n,y,x):
