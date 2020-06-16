@@ -34,7 +34,6 @@ def binaryImage(gray):
     dilated = cv2.dilate(gausTresh,None,iterations=1)
     eroded = cv2.erode(dilated,None,iterations=1)
     
-    
     return eroded
 
 def getGridCorners(binaryImg):
@@ -89,6 +88,8 @@ def getMatrix(img,mask):
     cnts = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
 
+    assert len(cnts) == 81, "Not 9x9 grid"
+
     # Sort the contours from top to bottom
     verticalSort,_ = contours.sort_contours(cnts,method="top-to-bottom")
 
@@ -142,23 +143,37 @@ def getNumber(cellImg):
 def img2Matrix(image):
     '''Returns a sudoku matrix given an image'''
     #preprocessing
-    resize = imutils.resize(image,height=700)
-    gray = cv2.cvtColor(resize,cv2.COLOR_BGR2GRAY)
-    binary = binaryImage(gray)
-
+    try:
+        resize = imutils.resize(image,height=700)
+        gray = cv2.cvtColor(resize,cv2.COLOR_BGR2GRAY)
+        binary = binaryImage(gray)
+    except AssertionError as err:
+        if "NoneType" in err:
+            print("AssertionError: invalid image")
+        else:
+            print("AssertionError: "+ err)
+        return
+        
     # Transforms and crops mask and grayscale img to sudoku grid
-    pts = getGridCorners(binary)
-    binWarp = perspective.four_point_transform(binary,pts)
-    grayWarp = perspective.four_point_transform(gray,pts)
-    #cv2.imwrite("tests/data/grayWarp.png",grayWarp)
+    try:
+        pts = getGridCorners(binary)
+        binWarp = perspective.four_point_transform(binary,pts)
+        grayWarp = perspective.four_point_transform(gray,pts)
+    except AssertionError as err:
+        print("AssertionError: {}".format(err))
+        return
 
     # Clean up to only grid
     cellMask = filterOutNumber(binWarp)
 
     #Get sudoku matrix
-    matrix = getMatrix(grayWarp,cellMask)
-    return matrix
+    try:
+        matrix = getMatrix(grayWarp,cellMask)
+    except AssertionError as err:  
+        print("AssertionError: {}".format(err))
+        return
 
+    return matrix
 
 def main(image):
     matrix = img2Matrix(image)
