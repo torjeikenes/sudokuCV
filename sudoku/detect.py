@@ -50,6 +50,7 @@ def img2Matrix(image):
 
     return matrix
 
+
 def binaryImage(gray):
     """Returns binary image"""
     # Preprocessing
@@ -166,6 +167,11 @@ def getNumber(cellImg):
                 return int(c)
     return 0
 
+def drawPoints(img,pts):
+    out = img.copy()
+    for p in pts:
+        out = cv2.circle(out,(p[0],p[1]),10,(0,0,255),-1)
+    return out
 
 
 if __name__ == '__main__':
