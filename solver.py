@@ -9,19 +9,52 @@ Sudoku Solver
 """
 
 import numpy as np
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s -  %(levelname)s -  %(message)s')
 
 def solve(grid):
     '''solve sudoku grid. Called recursively'''
+    solvedGrid = None
     for i in range(9):
-        for j in range(9)
-            if grid[i,j] == 0;
+        for j in range(9):
+            if grid[i,j] == 0:
                 for n in range(1,10):
-                    if checkNum(n,i,j):
+                    if checkNum(grid,n,i,j):
                         grid[i,j] = n
-                        grid = solve(grid)
+                        solvedGrid, solved = solve(grid)
+                        if solved:
+                            return solvedGrid, solved
                         grid[i,j] = 0
-                return grid
-    return grid
+                return grid,False
+    #logging.info("solved: "+str(grid))
+    return grid, True
+
+def checkNum(grid,n,y,x):
+    '''Check if the number is possible'''
+    possible = True
+    # Check column
+    if n in grid[y]:
+        possible = False
+    # Check row
+    for i in range(9):
+        if grid[i,x] == n:
+            possible = False
+    # Check square
+    squareY = (y // 3)*3
+    squareX = (x // 3)*3
+    for i in range(squareY,squareY+3):
+        for j in range(squareX,squareX+3):
+            if grid[i,j] == n:
+                possible = False
+
+    return possible
+
+
+
+
+
+
 
 
 
