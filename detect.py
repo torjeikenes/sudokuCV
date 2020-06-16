@@ -143,40 +143,29 @@ def getNumber(cellImg):
 def img2Matrix(image):
     '''Returns a sudoku matrix given an image'''
     #preprocessing
-    try:
-        resize = imutils.resize(image,height=700)
-        gray = cv2.cvtColor(resize,cv2.COLOR_BGR2GRAY)
-        binary = binaryImage(gray)
-    except AssertionError as err:
-        if "NoneType" in err:
-            print("AssertionError: invalid image")
-        else:
-            print("AssertionError: "+ err)
-        return
+    resize = imutils.resize(image,height=700)
+    gray = cv2.cvtColor(resize,cv2.COLOR_BGR2GRAY)
+    binary = binaryImage(gray)
         
     # Transforms and crops mask and grayscale img to sudoku grid
-    try:
-        pts = getGridCorners(binary)
-        binWarp = perspective.four_point_transform(binary,pts)
-        grayWarp = perspective.four_point_transform(gray,pts)
-    except AssertionError as err:
-        print("AssertionError: {}".format(err))
-        return
+    pts = getGridCorners(binary)
+    binWarp = perspective.four_point_transform(binary,pts)
+    grayWarp = perspective.four_point_transform(gray,pts)
 
     # Clean up to only grid
     cellMask = filterOutNumber(binWarp)
 
     #Get sudoku matrix
-    try:
-        matrix = getMatrix(grayWarp,cellMask)
-    except AssertionError as err:  
-        print("AssertionError: {}".format(err))
-        return
+    matrix = getMatrix(grayWarp,cellMask)
 
     return matrix
 
 def main(image):
-    matrix = img2Matrix(image)
+    try:
+        matrix = img2Matrix(image)
+    except AssertionError as err:
+        print("img2Matrix Failed: {}".format(err))
+
     logging.info("\n"+str(matrix))
     cv2.waitKey(0)
 
