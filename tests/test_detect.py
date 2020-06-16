@@ -79,7 +79,7 @@ class TestDetect(unittest.TestCase):
         
     def test_img2matrix(self):
         img = cv2.imread(os.path.join(self.dataPath,"sudoku1.jpg"))
-        matrix = detect.img2Matrix(img) 
+        matrix,_,_,_,_ = detect.img2Matrix(img) 
         correctMtrx = np.array([[0, 0, 0, 0, 5, 0, 0, 7, 0],
                                 [0, 0, 0, 3, 0, 0, 2, 5, 0],
                                 [0, 0, 0, 0, 0, 4, 0, 3, 8],

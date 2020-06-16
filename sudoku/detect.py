@@ -22,18 +22,26 @@ logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s -  %(levelname)s -
 
 def main(image):
     try:
-        matrix = img2Matrix(image)
+        matrix,_,_,_,_ = img2Matrix(image)
         logging.info("Detected sudoku: \n"+str(matrix))
+    except AssertionError as err:
+        print("Sudoku detector failed: {}".format(err))
+        return
+
+    try:
         solved = solver.solve(matrix)
         logging.info("Solved sudoku: \n"+str(matrix))
     except AssertionError as err:
         print("Sudoku solve failed: {}".format(err))
-    #cv2.waitKey(0)
+        return
+    
+
 
 def img2Matrix(image):
     '''Returns a sudoku matrix given an image'''
     #preprocessing
     resize = imutils.resize(image,height=700)
+    #cv2.waitKey(0)
     gray = cv2.cvtColor(resize,cv2.COLOR_BGR2GRAY)
     binary = binaryImage(gray)
         
@@ -46,9 +54,10 @@ def img2Matrix(image):
     cellMask = filterOutNumber(binWarp)
 
     #Get sudoku matrix
-    matrix = getMatrix(grayWarp,cellMask)
+    matrix, cellPts = getMatrix(grayWarp,cellMask)
+    logging.debug("shape"+str(grayWarp.shape))
 
-    return matrix
+    return matrix, cellPts, pts, resize, grayWarp.shape
 
 
 def binaryImage(gray):
@@ -70,9 +79,9 @@ def getGridCorners(binaryImg):
     cnts = cv2.findContours(binaryImg,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
     cnts = imutils.grab_contours(cnts)
 
-    assert len(cnts)>0, "No contours found"
+    assert len(cnts) > 0, "No contours found"
 
-    grid = max(cnts,key=cv2.contourArea)
+    grid = max(cnts, key=cv2.contourArea)
 
     # Find rectangle to get corners
     epsilon = 0.1*cv2.arcLength(grid,True)
@@ -116,6 +125,9 @@ def getMatrix(img,mask):
     cnts = cv2.findContours(mask,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
 
+	# Compute the center of the contour
+
+
     assert len(cnts) == 81, "Not 9x9 grid"
 
     # Sort the contours from top to bottom
@@ -131,6 +143,12 @@ def getMatrix(img,mask):
             numberGrid.append(horizontalSort)
             row = []
     
+    cellPos = []
+    for row in numberGrid:
+        M = cv2.moments(c)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+        cellPos.append((cX,cY))
     # Preprocessing
     blur = cv2.GaussianBlur(img,(5,5),0)
     clean = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
@@ -138,6 +156,8 @@ def getMatrix(img,mask):
     # Empty sudoku grid to be filled 
     sudokuMatrix = np.zeros((9,9),dtype=np.uint8)
 
+    # list of cell positions for displaying later
+    cellPos = []
     # Iterates trough all the cells from top to bottom left to right
     for i,r in enumerate(numberGrid):
         for j,c in enumerate(r):
@@ -148,8 +168,14 @@ def getMatrix(img,mask):
             number = getNumber(cellCrop)
             logging.debug("{}, {}: {}".format(i,j,number))
             sudokuMatrix[i,j] = number
+
+            # Get center of cell contour
+            M = cv2.moments(c)
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            cellPos.append((cX,cY))
     
-    return sudokuMatrix
+    return sudokuMatrix, cellPos
 
 def getNumber(cellImg):
     '''Returns the number from a cell'''
