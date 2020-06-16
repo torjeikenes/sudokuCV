@@ -16,13 +16,42 @@ import argparse
 import logging
 import numpy as np
 import pytesseract
+import solver
 
 logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s -  %(levelname)s -  %(message)s')
 
+def main(image):
+    try:
+        matrix = img2Matrix(image)
+        logging.info("Detected sudoku: \n"+str(matrix))
+        solved = solver.solve(matrix)
+        logging.info("Solved sudoku: \n"+str(matrix))
+    except AssertionError as err:
+        print("Sudoku solve failed: {}".format(err))
+    #cv2.waitKey(0)
+
+def img2Matrix(image):
+    '''Returns a sudoku matrix given an image'''
+    #preprocessing
+    resize = imutils.resize(image,height=700)
+    gray = cv2.cvtColor(resize,cv2.COLOR_BGR2GRAY)
+    binary = binaryImage(gray)
+        
+    # Transforms and crops mask and grayscale img to sudoku grid
+    pts = getGridCorners(binary)
+    binWarp = perspective.four_point_transform(binary,pts)
+    grayWarp = perspective.four_point_transform(gray,pts)
+
+    # Clean up to only grid
+    cellMask = filterOutNumber(binWarp)
+
+    #Get sudoku matrix
+    matrix = getMatrix(grayWarp,cellMask)
+
+    return matrix
 
 def binaryImage(gray):
     """Returns binary image"""
-
     # Preprocessing
     blur = cv2.GaussianBlur(gray,(11,11),0)
 
@@ -33,12 +62,10 @@ def binaryImage(gray):
     # Dilate and erode to make sure the grid contour connects
     dilated = cv2.dilate(gausTresh,None,iterations=1)
     eroded = cv2.erode(dilated,None,iterations=1)
-    
     return eroded
 
 def getGridCorners(binaryImg):
-    '''Return conrers'''
-    #contours = cv2.findContours(binaryImg,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    '''Return conrers of grid'''
     cnts = cv2.findContours(binaryImg,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
     cnts = imutils.grab_contours(cnts)
 
@@ -107,7 +134,6 @@ def getMatrix(img,mask):
     blur = cv2.GaussianBlur(img,(5,5),0)
     clean = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
 
-
     # Empty sudoku grid to be filled 
     sudokuMatrix = np.zeros((9,9),dtype=np.uint8)
 
@@ -140,34 +166,7 @@ def getNumber(cellImg):
                 return int(c)
     return 0
 
-def img2Matrix(image):
-    '''Returns a sudoku matrix given an image'''
-    #preprocessing
-    resize = imutils.resize(image,height=700)
-    gray = cv2.cvtColor(resize,cv2.COLOR_BGR2GRAY)
-    binary = binaryImage(gray)
-        
-    # Transforms and crops mask and grayscale img to sudoku grid
-    pts = getGridCorners(binary)
-    binWarp = perspective.four_point_transform(binary,pts)
-    grayWarp = perspective.four_point_transform(gray,pts)
 
-    # Clean up to only grid
-    cellMask = filterOutNumber(binWarp)
-
-    #Get sudoku matrix
-    matrix = getMatrix(grayWarp,cellMask)
-
-    return matrix
-
-def main(image):
-    try:
-        matrix = img2Matrix(image)
-    except AssertionError as err:
-        print("img2Matrix Failed: {}".format(err))
-
-    logging.info("\n"+str(matrix))
-    cv2.waitKey(0)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Detect a sudoku grid")

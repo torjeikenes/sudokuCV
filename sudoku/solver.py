@@ -14,21 +14,27 @@ import logging
 logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s -  %(levelname)s -  %(message)s')
 
 def solve(grid):
-    '''solve sudoku grid. Called recursively'''
+    '''solve sudoku grid. Called recursively with backtracking'''
     solvedGrid = None
+    assert len(grid) == 9, "Sudoku not 9x9"
+    assert len(grid[0]) == 9, "Sudoku not 9x9"
+    # Check all cells
     for i in range(9):
         for j in range(9):
             if grid[i,j] == 0:
                 for n in range(1,10):
-                    if checkNum(grid,n,i,j):
+                    if checkNum(grid,n,i,j):# Checks if number is possible in location
                         grid[i,j] = n
                         solvedGrid, solved = solve(grid)
-                        if solved:
+                        if solved: # Should not continue backtracking
                             return solvedGrid, solved
-                        grid[i,j] = 0
-                return grid,False
-    #logging.info("solved: "+str(grid))
-    return grid, True
+                        # Last attemt did not work, so cell is reset
+                        grid[i,j] = 0 
+                # Attemt didn't succeed so it backtracks
+                return grid, False
+
+    assert 0 in grid, "Sudoku not solved"
+    return grid, True # Sudoku is solved
 
 def checkNum(grid,n,y,x):
     '''Check if the number is possible'''
