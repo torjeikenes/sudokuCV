@@ -1,6 +1,8 @@
 # sudokuCV
 
 [![Build Status](https://travis-ci.org/torjeikenes/sudokuCV.svg?branch=master)](https://travis-ci.org/torjeikenes/sudokuCV)
+[![codecov](https://codecov.io/gh/torjeikenes/sudokuCV/branch/master/graph/badge.svg)](https://codecov.io/gh/torjeikenes/sudokuCV)
+
 
 Sudoku solver using OpenCV.
 
