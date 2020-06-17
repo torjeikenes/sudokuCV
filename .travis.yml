@@ -2,7 +2,7 @@ language: python
 python:
   - "3.8"
 before_install:
-  - sudo apt install tesseract-ocr
+  - sudo apt-get install tesseract-ocr
 cache: pip
 install:
   - pip install -r requirements.txt
