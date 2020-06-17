@@ -60,7 +60,7 @@ class TestDetect(unittest.TestCase):
                           cv2.IMREAD_GRAYSCALE)
         cellMask = cv2.imread(os.path.join(self.dataPath,"cellMask.png"),
                           cv2.IMREAD_GRAYSCALE)
-        matrix = detect.getMatrix(warp,cellMask) 
+        matrix,cellPos = detect.getMatrix(warp,cellMask) 
         correctMtrx = np.array([[0, 0, 0, 0, 5, 0, 0, 7, 0],
                                 [0, 0, 0, 3, 0, 0, 2, 5, 0],
                                 [0, 0, 0, 0, 0, 4, 0, 3, 8],
@@ -70,7 +70,8 @@ class TestDetect(unittest.TestCase):
                                 [4, 5, 0, 1, 0, 0, 0, 0, 0],
                                 [0, 8, 6, 0, 0, 5, 0, 0, 0],
                                 [0, 7, 0, 0, 9, 0, 0, 0, 0]])
-        self.assertEqual(matrix.tolist(),correctMtrx.tolist(),
+        #self.assertEqual(matrix.tolist(),correctMtrx.tolist(),
+        self.assertTrue(np.array_equal(matrix,correctMtrx),
               "Matrix detection failed. Detected {}\n correct{}".format(str(matrix), str(correctMtrx)))
 
             

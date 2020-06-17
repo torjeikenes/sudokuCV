@@ -29,16 +29,13 @@ def display(img,cellPts,sudoku,corners,warpShape):
     M = cv2.getPerspectiveTransform(pts,corners)
     warp = cv2.warpPerspective(textOut,M,(img.shape[1],img.shape[0]))
 
-    cv2.imshow("CV-text",warp)
-    cv2.waitKey(0)
     inv = (255-warp)
-    cv2.imshow("CV-text",inv)
-    cv2.waitKey(0)
 
     out = cv2.bitwise_and(img,inv)
+    #cv2.imshow("CV-text",out)
+    #cv2.waitKey(0)
+    return out
 
-    cv2.imshow("CV-text",out)
-    cv2.waitKey(0)
 
 
 
