@@ -7,6 +7,10 @@ before_install:
   - sudo apt-get install tesseract-ocr
 cache: pip
 install:
+  - pip install coverage
   - pip install -r requirements.txt
 script:
-  - python -m unittest discover -v
+  - coverage run -m unittest discover -v
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
