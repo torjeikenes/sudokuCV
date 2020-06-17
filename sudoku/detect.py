@@ -181,9 +181,9 @@ def getNumber(cellImg):
     '''Returns the number from a cell'''
     # TODO: increase speed of OCR
     # Apply OCR on the cropped image 
-    logging.debug("shape: "+ str(cellImg.shape))
     config = ('-l eng --oem 1 --psm 10')
     num = pytesseract.image_to_string(cellImg, config=config) 
+    logging.debug("num: "+ str(num))
 
     # Only returns a single digit
     if len(num) == 1 and num.isdigit():
