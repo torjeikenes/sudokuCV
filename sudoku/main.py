@@ -28,7 +28,9 @@ def main(image):
         print("Sudoku solve failed: {}".format(err))
         return
     
-    display.display(resize,cellPts,matrix,pts,warpSize)
+    output = display.display(resize,cellPts,matrix,pts,warpSize)
+    cv2.imshow("CV-Sudoku",output)
+    cv2.waitKey(0)
 
     
 

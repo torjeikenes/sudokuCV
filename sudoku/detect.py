@@ -55,7 +55,6 @@ def img2Matrix(image):
 
     #Get sudoku matrix
     matrix, cellPts = getMatrix(grayWarp,cellMask)
-    logging.debug("shape"+str(grayWarp.shape))
 
     return matrix, cellPts, pts, resize, grayWarp.shape
 
@@ -166,7 +165,7 @@ def getMatrix(img,mask):
             cellCrop = clean[y+cropMarg:y+h-cropMarg,x+cropMarg:x+w-cropMarg]
             # Get the number in the cell and add it to the matrix
             number = getNumber(cellCrop)
-            logging.debug("{}, {}: {}".format(i,j,number))
+            #logging.debug("{}, {}: {}".format(i,j,number))
             sudokuMatrix[i,j] = number
 
             # Get center of cell contour
@@ -183,7 +182,6 @@ def getNumber(cellImg):
     # Apply OCR on the cropped image 
     config = ('-l eng --oem 1 --psm 10')
     num = pytesseract.image_to_string(cellImg, config=config) 
-    logging.debug("num: "+ str(num))
 
     # Only returns a single digit
     if len(num) == 1 and num.isdigit():

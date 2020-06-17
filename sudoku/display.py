@@ -23,17 +23,20 @@ def display(img,cellPts,sudoku,corners,warpShape):
             textOut = cv2.putText(textOut,str(n),cellPts[i*9+j],# index from 2d to 1d array
                         cv2.FONT_ITALIC,0.9,(255,255,0),2)
     sh = textOut.shape 
-    pts = np.float32([[0,0],[sh[1],0],[sh[1],sh[0]],[0,sh[0]]])
-    corners = perspective.order_points(np.array(corners))
 
+    # Orders corners to top-left,top-right,bottom-right, bottom-left
+    corners = perspective.order_points(np.array(corners))
+    # Ordered to top-left,top-right,bottom-right, bottom-left
+    pts = np.float32([[0,0],[sh[1],0],[sh[1],sh[0]],[0,sh[0]]])
+
+    # Transforms image to overlay sudoku on original image
     M = cv2.getPerspectiveTransform(pts,corners)
     warp = cv2.warpPerspective(textOut,M,(img.shape[1],img.shape[0]))
 
     inv = (255-warp)
+    
 
     out = cv2.bitwise_and(img,inv)
-    #cv2.imshow("CV-text",out)
-    #cv2.waitKey(0)
     return out
 
 
