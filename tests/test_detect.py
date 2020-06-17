@@ -44,6 +44,7 @@ class TestDetect(unittest.TestCase):
     def test_get_numbers(self):
         for i in range(10):
             img = cv2.imread(os.path.join(self.numPath,str(i)+".png"))
+            logging.debug("shape: "+ str(img.shape))
             num = detect.getNumber(img)
             self.assertEqual(num,i, 
                             "Should be {}. {} was detected".format(i,num))
