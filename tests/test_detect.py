@@ -17,9 +17,6 @@ import cv2
 import numpy as np
 import imutils
 
-def diff(m1,m2):
-    dif = np.abs(m1-m2)
-    return str(dif)
 
 class TestDetect(unittest.TestCase):
     dir = os.path.dirname(__file__)
