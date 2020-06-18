@@ -1,6 +1,8 @@
 # sudokuCV
 
 [![Build Status](https://travis-ci.org/torjeikenes/sudokuCV.svg?branch=master)](https://travis-ci.org/torjeikenes/sudokuCV)
+[![codecov](https://codecov.io/gh/torjeikenes/sudokuCV/branch/master/graph/badge.svg)](https://codecov.io/gh/torjeikenes/sudokuCV)
+
 
 Sudoku solver using OpenCV.
 
@@ -30,17 +32,29 @@ python3 sudoku/main.py -i <Image File>
 ### Detection
 
 * Input image
+
 ![Input image](images/sudoku1.jpg)
+
 * Treshold image to find the biggest contour which is the grid
+
 ![Tresholded image](images/binary1.png)
+
 * Find corners of the grid from the biggest contour in the last image
+
 ![Corners](images/points.png) 
+
 * Warp the binary image and the gray image with the points found earlier
+
 ![WarpBinary](images/binaryWarp.png)
+
 * The warped gray image is thresholded for ocr
+
 ![ocr Threshold](images/cleanWarp.png)
+
 * Filter out the numbers from the first warped image and repair grid lines to only get the cells
+
 ![Filtered Image](images/cellMask.png)
+
 * The cells are sorted and used to cut out the cell from the thresholded image and send it to Tesseract to recognise the number
 
 ![cutout](images/numbers/1.png)
@@ -74,12 +88,15 @@ The solver takes a numpy matrix as the input and uses recursive backtracking to 
 ### Display
 
 * Uses the positions of all the cells from the filtered image to display all the numbers on a black background
+
 ![textOut](images/textOut.png)
 
 * Warp inversion of last image onto the original image using the points found under detection
+
 ![inv](images/inv.png)
 
 * The image is merged with the original image with bitwise_and
+
 ![output](images/output.png)
 
 
