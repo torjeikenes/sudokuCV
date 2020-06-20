@@ -24,7 +24,7 @@ def main(image):
     try:
         matrix,_,_,_,_ = img2Matrix(image)
         logging.info("Detected sudoku: \n"+str(matrix))
-    except AssertionError as err:
+    except AssertionError as err: #pragma: no cover
         print("Sudoku detector failed: {}".format(err))
         return
 
@@ -32,7 +32,7 @@ def main(image):
         solved,_ = solver.solve(matrix)
         logging.info("Solved sudoku: \n"+str(matrix))
         return solved
-    except AssertionError as err:
+    except AssertionError as err: #pragma: no cover
         print("Sudoku solve failed: {}".format(err))
         return
 
