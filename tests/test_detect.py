@@ -17,11 +17,23 @@ import cv2
 import numpy as np
 import imutils
 
+def is_similar(image1, image2):
+    '''Check if 2 images are similar'''
+    return image1.shape == image2.shape and not(np.bitwise_xor(image1,image2).any())
 
 class TestDetect(unittest.TestCase):
     dir = os.path.dirname(__file__)
     dataPath = os.path.join(dir,'data/')
     numPath = os.path.join(dataPath,'numbers/')
+    correctMtrx = np.array([[0, 0, 0, 0, 5, 0, 0, 7, 0],
+                            [0, 0, 0, 3, 0, 0, 2, 5, 0],
+                            [0, 0, 0, 0, 0, 4, 0, 3, 8],
+                            [0, 0, 0, 0, 7, 6, 4, 0, 3],
+                            [1, 0, 0, 0, 0, 0, 0, 0, 2],
+                            [9, 0, 3, 2, 8, 0, 0, 0, 0],
+                            [4, 5, 0, 1, 0, 0, 0, 0, 0],
+                            [0, 8, 6, 0, 0, 5, 0, 0, 0],
+                            [0, 7, 0, 0, 9, 0, 0, 0, 0]])
 
     def test_binary(self):
         img = cv2.imread(os.path.join(self.dataPath,"sudoku1.jpg"))
@@ -58,37 +70,31 @@ class TestDetect(unittest.TestCase):
         cellMask = cv2.imread(os.path.join(self.dataPath,"cellMask.png"),
                           cv2.IMREAD_GRAYSCALE)
         matrix,cellPos = detect.getMatrix(warp,cellMask) 
-        correctMtrx = np.array([[0, 0, 0, 0, 5, 0, 0, 7, 0],
-                                [0, 0, 0, 3, 0, 0, 2, 5, 0],
-                                [0, 0, 0, 0, 0, 4, 0, 3, 8],
-                                [0, 0, 0, 0, 7, 6, 4, 0, 3],
-                                [1, 0, 0, 0, 0, 0, 0, 0, 2],
-                                [9, 0, 3, 2, 8, 0, 0, 0, 0],
-                                [4, 5, 0, 1, 0, 0, 0, 0, 0],
-                                [0, 8, 6, 0, 0, 5, 0, 0, 0],
-                                [0, 7, 0, 0, 9, 0, 0, 0, 0]])
-        #self.assertEqual(matrix.tolist(),correctMtrx.tolist(),
-        self.assertTrue(np.array_equal(matrix,correctMtrx),
-              "Matrix detection failed. Detected {}\n correct{}".format(str(matrix), str(correctMtrx)))
-
-            
-
-
+        self.assertTrue(np.array_equal(matrix,self.correctMtrx),
+              "Matrix detection failed. Detected {}\n correct{}".format(str(matrix), str(self.correctMtrx)))
+    
+    def test_drawPoint(self):
+        img = cv2.imread(os.path.join(self.dataPath,"resize.png"))
+        points = cv2.imread(os.path.join(self.dataPath,"points.png"))
+        pts = np.array([[160,183],
+                        [577,101],
+                        [286,587],
+                        [771,451]])
+        drawnPoints = detect.drawPoints(img,pts)
+        self.assertTrue(is_similar(points,drawnPoints),"Points image is not correct")
         
     def test_img2matrix(self):
         img = cv2.imread(os.path.join(self.dataPath,"sudoku1.jpg"))
         matrix,_,_,_,_ = detect.img2Matrix(img) 
-        correctMtrx = np.array([[0, 0, 0, 0, 5, 0, 0, 7, 0],
-                                [0, 0, 0, 3, 0, 0, 2, 5, 0],
-                                [0, 0, 0, 0, 0, 4, 0, 3, 8],
-                                [0, 0, 0, 0, 7, 6, 4, 0, 3],
-                                [1, 0, 0, 0, 0, 0, 0, 0, 2],
-                                [9, 0, 3, 2, 8, 0, 0, 0, 0],
-                                [4, 5, 0, 1, 0, 0, 0, 0, 0],
-                                [0, 8, 6, 0, 0, 5, 0, 0, 0],
-                                [0, 7, 0, 0, 9, 0, 0, 0, 0]])
-        self.assertEqual(matrix.tolist(),correctMtrx.tolist(),
-              "Matrix detection failed. Detected {}\n correct{}".format(str(matrix), str(correctMtrx)))
+        self.assertEqual(matrix.tolist(),self.correctMtrx.tolist(),
+              "Matrix detection failed. Detected {}\n correct{}".format(str(matrix), str(self.correctMtrx)))
+    
+    def test_detect_main(self):
+        img = cv2.imread(os.path.join(self.dataPath,"sudoku1.jpg"))
+        matrix = detect.main(img)
+        self.assertEqual(matrix.tolist(),self.correctMtrx.tolist(),
+              "Matrix detection failed. Detected {}\n correct{}".format(str(matrix), str(self.correctMtrx)))
+
         
 if __name__ == '__main__':
     unittest.main()

@@ -29,12 +29,12 @@ def main(image):
         return
 
     try:
-        solved = solver.solve(matrix)
+        solved,_ = solver.solve(matrix)
         logging.info("Solved sudoku: \n"+str(matrix))
+        return solved
     except AssertionError as err:
         print("Sudoku solve failed: {}".format(err))
         return
-    
 
 
 def img2Matrix(image):
@@ -182,11 +182,11 @@ def getNumber(cellImg):
     # Apply OCR on the cropped image 
     config = ('-l eng --oem 1 --psm 10')
     num = pytesseract.image_to_string(cellImg, config=config) 
-
+    logging.debug("num: "+ str(num))
     # Only returns a single digit
     if len(num) == 1 and num.isdigit():
         return int(num)
-    elif len(num) > 1:
+    elif len(num) > 1: #pragma: no cover
         for c in num:
             if c.isdigit():
                 return int(c)

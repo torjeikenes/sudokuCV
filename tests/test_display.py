@@ -57,10 +57,6 @@ class TestDisplay(unittest.TestCase):
                         [286,587],
                         [771,451]])
 
-    #pts = np.float32([[183,160],
-    #                  [101,577],
-    #                  [587,286],
-    #                  [451,771]])
 
     def test_display(self):
         warpShape = (423,503)
