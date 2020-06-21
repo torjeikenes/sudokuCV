@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/torjeikenes/sudokuCV/branch/master/graph/badge.svg)](https://codecov.io/gh/torjeikenes/sudokuCV)
 
 
-Sudoku solver using OpenCV.
+Sudoku solver using OpenCV. Project for learning OpenCV, as well as testing, CI, coverage, etc.
 
 ## Prerequisits
 
