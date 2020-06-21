@@ -52,7 +52,8 @@ class TestDetect(unittest.TestCase):
     
     def test_get_numbers(self):
         for i in range(10):
-            img = cv2.imread(os.path.join(self.numPath,str(i)+".png"))
+            img = cv2.imread(os.path.join(self.numPath,str(i)+".png"),
+                             cv2.IMREAD_GRAYSCALE)
             num = detect.getNumber(img)
             self.assertEqual(num,i, 
                             "Should be {}. {} was detected".format(i,num))
@@ -82,6 +83,16 @@ class TestDetect(unittest.TestCase):
                         [771,451]])
         drawnPoints = detect.drawPoints(img,pts)
         self.assertTrue(is_similar(points,drawnPoints),"Points image is not correct")
+    
+    def test_containsNumber_with_number(self):
+        img = cv2.imread(os.path.join(self.numPath,"5.png"), cv2.IMREAD_GRAYSCALE)
+        contains = detect.containsNumber(img)
+        self.assertTrue(contains,"Should contain number")
+
+    def test_containsNumber_without_number(self):
+        img = cv2.imread(os.path.join(self.numPath,"0.png"), cv2.IMREAD_GRAYSCALE)
+        contains = detect.containsNumber(img)
+        self.assertFalse(contains,"Should not contain number")
         
     def test_img2matrix(self):
         img = cv2.imread(os.path.join(self.dataPath,"sudoku1.jpg"))
