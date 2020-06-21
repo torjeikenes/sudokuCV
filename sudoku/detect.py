@@ -177,6 +177,10 @@ def getMatrix(img,mask):
 
 def getNumber(cellImg):
     '''Returns the number from a cell'''
+    # Dont do ocr of no number is in the cell
+    if not containsNumber(cellImg):
+        return 0
+
     # TODO: increase speed of OCR
     # Apply OCR on the cropped image 
     config = ('-l eng --oem 1 --psm 10')
@@ -188,7 +192,30 @@ def getNumber(cellImg):
         for c in num:
             if c.isdigit():
                 return int(c)
-    return 0
+    else: # pragma: no cover
+        return 0
+
+def containsNumber(cellImg):
+    '''Checks if a cell contains a number'''
+    numberTreshold = 20 # Area to be considered a number
+
+    # Invert image
+    inv = (255-cellImg)
+
+    #Get contours from cell
+    cnts = cv2.findContours(inv,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+
+    contains = False
+
+    # Checks if the cell has any contours that are larger than numberTreshold
+    if len(cnts) > 0:
+        maxArea = max(cnts, key=cv2.contourArea)
+        if maxArea.size > numberTreshold: #pragma: no branch
+            contains = True
+    
+    return contains
+    
 
 def drawPoints(img,pts):
     out = img.copy()
