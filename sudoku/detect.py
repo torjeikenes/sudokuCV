@@ -204,7 +204,7 @@ def getNumber(img,api):
     num = api.GetUTF8Text()
 
     # Only returns a single digit
-    if len(num) == 1 and num.isdigit():
+    if len(num) == 1 and num.isdigit(): #pragma: no cover
         return int(num)
     elif len(num) > 1: #pragma: no cover
         for c in num:
