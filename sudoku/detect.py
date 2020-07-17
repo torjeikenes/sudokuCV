@@ -15,8 +15,11 @@ from imutils import contours
 import argparse
 import logging
 import numpy as np
-import pytesseract
 import solver
+from tesserocr import PyTessBaseAPI, PSM, OEM
+from string import digits
+
+
 
 logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s -  %(levelname)s -  %(message)s')
 
@@ -40,7 +43,7 @@ def main(image):
 def img2Matrix(image):
     '''Returns a sudoku matrix given an image'''
     #preprocessing
-    resize = imutils.resize(image,height=700)
+    resize = imutils.resize(image,height=1200)
     #cv2.waitKey(0)
     gray = cv2.cvtColor(resize,cv2.COLOR_BGR2GRAY)
     binary = binaryImage(gray)
@@ -158,35 +161,50 @@ def getMatrix(img,mask):
     # list of cell positions for displaying later
     cellPos = []
     # Iterates trough all the cells from top to bottom left to right
-    for i,r in enumerate(numberGrid):
-        for j,c in enumerate(r):
-            # Crops the cell
-            x,y,w,h = cv2.boundingRect(c)
-            cellCrop = clean[y+cropMarg:y+h-cropMarg,x+cropMarg:x+w-cropMarg]
-            # Get the number in the cell and add it to the matrix
-            number = getNumber(cellCrop)
-            sudokuMatrix[i,j] = number
+    with PyTessBaseAPI(psm=PSM.SINGLE_CHAR) as api:
+        for i,r in enumerate(numberGrid):
+            for j,c in enumerate(r):
+                # Crops the cell
+                x,y,w,h = cv2.boundingRect(c)
+                cellCrop = clean[y+cropMarg:y+h-cropMarg,x+cropMarg:x+w-cropMarg]
+                # Get the number in the cell and add it to the matrix
+                number = getNumber(cellCrop,api)
+                sudokuMatrix[i,j] = number
 
-            # Get center of cell contour
-            M = cv2.moments(c)
-            cX = int(M["m10"] / M["m00"])
-            cY = int(M["m01"] / M["m00"])
-            cellPos.append((cX,cY))
+                # Get center of cell contour
+                M = cv2.moments(c)
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                cellPos.append((cX,cY))
     
     return sudokuMatrix, cellPos
 
-def getNumber(cellImg):
+def getNumber(img,api):
     '''Returns the number from a cell'''
+
+    img = cv2.erode(img,None,iterations=1)
+    img = cv2.dilate(img,None,iterations=1)
+
     # Dont do ocr of no number is in the cell
-    if not containsNumber(cellImg):
+    if not containsNumber(img):
         return 0
 
     # TODO: increase speed of OCR
     # Apply OCR on the cropped image 
-    config = ('-l eng --oem 1 --psm 10')
-    num = pytesseract.image_to_string(cellImg, config=config) 
+    try:
+        channels = img.shape[2]
+    except IndexError:
+        channels = 1
+    
+
+    api.SetVariable('tessedit_char_whitelist', digits)
+    api.SetImageBytes(img.tobytes(), img.shape[1], img.shape[0], channels, channels*img.shape[1])
+
+    #num = api.image_to_string()
+    num = api.GetUTF8Text()
+
     # Only returns a single digit
-    if len(num) == 1 and num.isdigit():
+    if len(num) == 1 and num.isdigit(): #pragma: no cover
         return int(num)
     elif len(num) > 1: #pragma: no cover
         for c in num:
