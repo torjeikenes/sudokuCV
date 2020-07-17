@@ -39,10 +39,10 @@ def solve(grid):
 def checkNum(grid,n,y,x):
     '''Check if the number is possible'''
     possible = True
-    # Check column
+    # Check row
     if n in grid[y]:
         possible = False
-    # Check row
+    # Check column
     for i in range(9):
         if grid[i,x] == n:
             possible = False
