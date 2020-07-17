@@ -16,6 +16,7 @@ from .context import detect
 import cv2
 import numpy as np
 import imutils
+from tesserocr import PyTessBaseAPI, PSM, OEM
 
 def is_similar(image1, image2):
     '''Check if 2 images are similar'''
@@ -51,12 +52,14 @@ class TestDetect(unittest.TestCase):
         self.assertEqual(len(pts),4,"Should have 4 corners. It has "+ str(len(pts)))
     
     def test_get_numbers(self):
-        for i in range(10):
-            img = cv2.imread(os.path.join(self.numPath,str(i)+".png"),
-                             cv2.IMREAD_GRAYSCALE)
-            num = detect.getNumber(img)
-            self.assertEqual(num,i, 
-                            "Should be {}. {} was detected".format(i,num))
+        with PyTessBaseAPI(psm=PSM.SINGLE_CHAR) as api:
+            for i in range(10):
+                img = cv2.imread(os.path.join(self.numPath,str(i)+".png"),
+                                cv2.IMREAD_GRAYSCALE)
+                num = detect.getNumber(img,api)
+                self.assertEqual(num,i, 
+                                "Should be {}. {} was detected".format(i,num))
+
     def test_filter(self):
         warp = cv2.imread(os.path.join(self.dataPath,"binaryWarp.png"),
                           cv2.IMREAD_GRAYSCALE)
