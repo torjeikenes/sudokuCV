@@ -8,7 +8,7 @@ opencv-contrib-python==4.2.0.34
 Pillow==7.1.2
 pylint==2.5.3
 pytesseract==0.3.4
-scipy==1.4.1
+scipy==1.10.0
 six==1.15.0
 tesserocr==2.5.1
 toml==0.10.1
